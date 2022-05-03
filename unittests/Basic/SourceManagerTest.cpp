@@ -51,6 +51,50 @@ protected:
   IntrusiveRefCntPtr<TargetInfo> Target;
 };
 
+TEST_F(SourceManagerTest, isInMemoryBuffersNoSourceLocationInfo) {
+  SourceLocation Loc = NULL;
+  bool inBuiltInFileFalse = SourceManager::isWrittenInBuiltinFile(Loc);
+  bool isWrittenInCommandLindFileFalse =
+    SourceManager::isWrittenInCommandLineFile(Loc);
+  bool isWrittenInScratchSpaceFalse = SourceManager::isWrittenInScratchSpace(Loc);
+
+  EXPECT_FALSE(inBuiltInFileFalse);
+  EXPECT_FALSE(isWrittenInCommandLindFileFalse);
+  EXPECT_FALSE(isWrittenInScratchSpaceFalse);
+
+  const char *Source =
+    "int x;\n"
+    "int y;";
+  std::unique_ptr<llvm::MemoryBuffer> Buf =
+    llvm::MemoryBuffer::getMemBuffer(Source);
+  FileID MainFileID = SourceMgr.createFileID(std::move(Buf));
+  SourceMgr.setMainFileID(MainFileID);
+
+  PresumedLoc Presumed = NULL;
+  Presumed.Filename = "<built-in>";
+  bool inBuiltInFileTrue = SourceManager::isWrittenInBuiltinFile(Loc);
+
+  Presumed.Filename = "<command line>";
+  bool isWrittenInCommandLineFileTrue =
+    SourceManager::isWrittenInCommandLineFile(Loc);
+
+  Presumed.Filename = "<scratch space>";
+  bool isWrittenInScratchSpaceTrue = SourceManager::isWrittenInScratchSpace(Loc);
+
+  EXPECT_TRUE(inBuiltInFileTrue);
+  EXPECT_TRUE(isWrittenInCommandLineFileTrue);
+  EXPECT_TRUE(isWrittenInScratchSpaceTrue);
+}
+
+TEST_F(SourceManagerTest, isInSystemHeader) {
+  SourceLocation Loc = NULL;
+  bool isInSystemHeaderFalse = SourceManager::isInSystemHeader(Loc);
+  ASSERT_FALSE(isInSystemHeaderFalse);
+
+  bool isInSystemHeaderTrue = SourceManager::isInSystemHeaderTrue(Loc);
+  EXPECT_TRUE(isInSystemHeaderTrue);
+}
+
 TEST_F(SourceManagerTest, isBeforeInTranslationUnit) {
   const char *source =
     "#define M(x) [x]\n"
