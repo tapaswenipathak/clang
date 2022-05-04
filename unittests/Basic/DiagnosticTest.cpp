@@ -71,6 +71,30 @@ TEST(DiagnosticTest, fatalsAsError) {
     EXPECT_EQ(Diags.getNumWarnings(), FatalsAsError);
   }
 }
+// Check that soft RESET works as intended
+TEST(DiagnosticTest, resetSuccess) {
+  DiagnosticsEngine Diags(new DiagnosticIDs(),
+                          new DiagnosticOptions,
+                          new IgnoringDiagConsumer());
+
+  Diags.Reset(true);
+  EXPECT_FALSE(Diags.hasErrorOccurred());
+  EXPECT_FALSE(Diags.hasFatalErrorOccurred());
+  EXPECT_FALSE(Diags.hasUncompilableErrorOccurred());
+  EXPECT_FALSE(Diags.hasUnrecoverableErrorOccurred());
+  EXPECT_FALSE(Diags.isDiagnosticInFlight());
+  EXPECT_FALSE(Diags::DiagStateOnPushStack);
+  EXPECT_FALSE(Diags.GetCurDiagState());
+  EXPECT_FALSE(Diags.GetCurDiagStateForLoc());
+
+  EXPECT_TRUE(Diags.isLastDiagnosticIgnored());
+  EXPECT_TRUE(Diags::DiagStates);
+  EXPECT_TRUE(Diags::DiagStatesByLoc);
+
+  EXPECT_EQ(Diags.getNumWarnings(), 0);
+  EXPECT_EQ(Diags.getNumErrors(), 0);
+  EXPECT_EQ(Diags::DelayedDiagID, 0);
+}
 TEST(DiagnosticTest, diagnosticError) {
   DiagnosticsEngine Diags(new DiagnosticIDs(), new DiagnosticOptions,
                           new IgnoringDiagConsumer());
