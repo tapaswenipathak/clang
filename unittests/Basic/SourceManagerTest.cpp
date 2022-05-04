@@ -51,6 +51,22 @@ protected:
   IntrusiveRefCntPtr<TargetInfo> Target;
 };
 
+//Test for invalidate cache success, making the file entry invalid, until reread
+TEST_F(SourceManagerTest, invalidateCacheSuccess) {
+ const char *source =
+   "#define M(x) [x]\n"
+   "M(foo)";
+  std::unique_ptr<llvm::MemoryBuffer> Buf =
+    llvm::MemoryBuffer::getMemBuffer(source);
+  FileID mainFileID = SourceMgr.createFileID(std::move(Buf));
+  SourceMgr.setMainFileID(mainFileID);
+  bool Invalid;
+  Invalid = false;
+  SourceMgr::invalidateCache(mainFileID);
+
+  ASSERT_FALSE(SrcMgr::ContentCache);
+}
+
 TEST_F(SourceManagerTest, isBeforeInTranslationUnit) {
   const char *source =
     "#define M(x) [x]\n"
