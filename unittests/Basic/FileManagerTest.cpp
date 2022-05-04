@@ -98,6 +98,17 @@ class FileManagerTest : public ::testing::Test {
   FileManager manager;
 };
 
+//Mark the file entry invalid, until reread.
+TEST_F(FileManagerTest, invalidateCacheSuccess) {
+  const FileEntry *file = NULL;
+  manager.InvalidateCache(file);
+  EXPECT_TRUE(file == nullptr);
+
+  ASSERT_TRUE(file->FileEntriesToReread);
+
+  ASSERT_FALSE(file->isValid());
+}
+
 // When a virtual file is added, its getDir() field is set correctly
 // (not NULL, correct name).
 TEST_F(FileManagerTest, getVirtualFileSetsTheDirFieldCorrectly) {
